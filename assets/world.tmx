@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="isometric" renderorder="right-down" width="30" height="20" tilewidth="128" tileheight="64" infinite="1" nextlayerid="8" nextobjectid="8">
+<map version="1.9" tiledversion="1.9.2" orientation="isometric" renderorder="right-down" width="30" height="20" tilewidth="128" tileheight="64" infinite="1" nextlayerid="10" nextobjectid="12">
  <tileset firstgid="1" source="city.tsx"/>
  <tileset firstgid="268" source="buildings.tsx"/>
  <tileset firstgid="397" source="landscape.tsx"/>
@@ -78,7 +78,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </chunk>
    <chunk x="0" y="0" width="16" height="16">
-0,0,0,0,0,0,0,0,220,0,0,0,0,0,0,0,
+191,0,0,0,0,0,0,0,220,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,220,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,220,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,220,0,0,0,0,0,0,0,
@@ -205,6 +205,28 @@
 </chunk>
   </data>
  </layer>
+ <layer id="9" name="Level 0" width="30" height="20">
+  <data encoding="csv">
+   <chunk x="0" y="0" width="16" height="16">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,304,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</chunk>
+  </data>
+ </layer>
  <layer id="2" name="Level 1" width="30" height="20" offsetx="17" offsety="-12">
   <data encoding="csv">
    <chunk x="16" y="-48" width="16" height="16">
@@ -289,6 +311,9 @@
 </chunk>
   </data>
  </layer>
+ <objectgroup id="8" name="Building collisions">
+  <object id="8" x="667.75" y="410.875" width="65.625" height="64.125"/>
+ </objectgroup>
  <objectgroup id="7" name="Delivery points">
   <object id="1" x="253.439" y="141.409">
    <point/>

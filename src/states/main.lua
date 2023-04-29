@@ -2,9 +2,10 @@ local lume = require("lib.lume")
 local Timer = require("lib.hump.timer")
 local Camera = require("lib.hump.camera")
 local Tiled = require("lib.tiled")
+local HC = require("lib.HC")
 local MainState = {}
 
-local DEBUG = false
+local DEBUG = true
 
 local player_images = {
 	love.graphics.newImage("resources/player-car/carRed6_008.png"),
@@ -21,12 +22,30 @@ local function boolToNumber(x)
 	return x and 1 or 0
 end
 
+local function transformFromIsometric(x, y, tileW)
+	local newX = x   - y
+	local newY = x/2 + y/2
+	return newX + tileW/2, newY
+end
+
 function MainState:init()
 	self.map = Tiled.loadFromLuaFile("resources/world.lua")
 
 	self.delivery_points = {}
 	for _, obj in ipairs(self.map:getLayer("Delivery points").objects) do
 		table.insert(self.delivery_points, Vec(obj.x, obj.y))
+	end
+
+	self.collider_world = HC.new(self.map.tileWidth*4)
+	self.building_colliders = {}
+	local tileWidth = self.map.tileWidth
+	for _, obj in ipairs(self.map:getLayer("Building collisions").objects) do
+		local px1, py1 = transformFromIsometric(obj.x, obj.y, tileWidth)
+		local px2, py2 = transformFromIsometric(obj.x+obj.width, obj.y, tileWidth)
+		local px3, py3 = transformFromIsometric(obj.x+obj.width, obj.y+obj.height, tileWidth)
+		local px4, py4 = transformFromIsometric(obj.x, obj.y+obj.height, tileWidth)
+		local rect = self.collider_world:polygon(px1, py1, px2, py2, px3, py3, px4, py4)
+		table.insert(self.building_colliders, rect)
 	end
 
 	self.active_orders = {}
@@ -41,8 +60,9 @@ function MainState:init()
 		look_dir = Vec(1, 0),
 		brake_hold_time = 0,
 		last_forward_press = -10,
-		speed = 0
+		speed = 0,
 	}
+	self.player.collider = self.collider_world:circle(self.player.pos.x, self.player.pos.y, 10)
 
 	self:create_order()
 	self:create_order()
@@ -125,8 +145,17 @@ function MainState:player_car_controls(dt)
 	end
 
 	player.vel = player.vel * (1 - math.min(friction, 1)) ^ dt
-	self.player.vel = self.player.vel + acc * dt
-	self.player.pos = self.player.pos + self.player.vel * dt
+	player.vel = player.vel + acc * dt
+	player.pos = player.pos + player.vel * dt
+
+	self.player.collider:moveTo(player.pos.x, player.pos.y)
+	for _, delta in pairs(self.collider_world:collisions(self.player.collider)) do
+		self.player.pos.x = self.player.pos.x + delta.x
+		self.player.pos.y = self.player.pos.y + delta.y
+		self.player.collider:move(delta.x, delta.y)
+		-- player.vel.setLength
+		player.speed = 0
+	end
 end
 
 function MainState:update(dt)
@@ -147,8 +176,8 @@ function MainState:keypressed(key)
 		local diff = now - self.player.last_forward_press
 		self.player.last_forward_press = now
 		local braking = love.keyboard.isDown("j")
-		if diff <= 0.5 and self.player.vel.length < 80 and not braking then
-			self.player.vel = self.player.move_dir * 200
+		if diff <= 0.5 and self.player.vel.length < 120 and not braking then
+			self.player.vel = self.player.move_dir * 300
 		end
 	elseif key == "k" then
 		local picked_up_orders = {}
@@ -186,8 +215,7 @@ function MainState:draw()
 
 	self.camera:attach(nil, nil, nil, nil, true)
 	love.graphics.setColor(1, 1, 1, 1)
-	self.map:draw()
-	love.graphics.circle("fill", 0, 0, 5)
+	self.map:drawLayer(self.map.layers[1])
 
 	love.graphics.push()
 		love.graphics.translate(pos.x, pos.y)
@@ -213,6 +241,20 @@ function MainState:draw()
 		local image_width, image_height = player_image:getDimensions()
 		love.graphics.draw(player_image, -image_width/2, -image_height/2)
 	love.graphics.pop()
+
+	self.map:draw(2)
+
+	if DEBUG then
+		love.graphics.setColor(rgb(150, 20, 150))
+		self.player.collider:draw()
+	end
+	if DEBUG then
+		love.graphics.circle("fill", 0, 0, 5)
+		love.graphics.setColor(rgb(150, 20, 150))
+		for _, collider in ipairs(self.building_colliders) do
+			collider:draw("line")
+		end
+	end
 
 	love.graphics.setColor(rgb(20, 200, 200))
 	for _, point in ipairs(self.delivery_points) do
@@ -259,10 +301,12 @@ function MainState:draw()
 	end
 	self.camera:detach()
 
-	love.graphics.setColor(rgb(255, 255, 255))
-	love.graphics.setNewFont(30)
-	love.graphics.print(tostring(self.orders_completed), 10, 10)
-	love.graphics.print(("%f"):format(self.player.vel.length), 10, 40)
+	if DEBUG then
+		love.graphics.setColor(rgb(255, 255, 255))
+		love.graphics.setNewFont(30)
+		love.graphics.print(tostring(self.orders_completed), 10, 10)
+		love.graphics.print(("%f"):format(self.player.vel.length), 10, 40)
+	end
 end
 
 return MainState

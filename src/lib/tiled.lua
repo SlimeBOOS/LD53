@@ -157,12 +157,16 @@ local function drawTileLayer(layer, tileWidth, tileHeight)
 	end
 end
 
-function Map:draw()
-	for _, layer in ipairs(self.layers) do
-		if layer.type == LAYER_TYPE_TILELAYER then
-			drawTileLayer(layer, self.tileWidth, self.tileHeight)
-			-- love.graphics.draw(layer.spriteBatch)
-		end
+function Map:draw(fromLayer)
+	fromLayer = fromLayer or 1
+	for idx=fromLayer, #self.layers-1 do
+		self:drawLayer(self.layers[idx])
+	end
+end
+
+function Map:drawLayer(layer)
+	if layer.type == LAYER_TYPE_TILELAYER then
+		drawTileLayer(layer, self.tileWidth, self.tileHeight)
 	end
 end
 

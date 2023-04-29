@@ -13,7 +13,7 @@ return {
   objectalignment = "unspecified",
   properties = {},
   spacing = 0,
-  tilecount = 9,
+  tilecount = 10,
   tiledversion = "1.9.2",
   tileheight = 130,
   tileoffset = {
@@ -27,6 +27,12 @@ return {
       id = 8,
       image = "resources/images/buildingTiles_008.png",
       width = 99
+    },
+    {
+      height = 127,
+      id = 36,
+      image = "resources/images/buildingTiles_036.png",
+      width = 133
     },
     {
       height = 127,
