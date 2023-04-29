@@ -1,7 +1,10 @@
 local lume = require("lib.lume")
 local Timer = require("lib.hump.timer")
 local Camera = require("lib.hump.camera")
+local Tiled = require("lib.tiled")
 local MainState = {}
+
+local DEBUG = true
 
 local function boolToNumber(x)
 	return x and 1 or 0
@@ -40,6 +43,7 @@ function MainState:init()
 	end)
 
 	self.camera = Camera(self.player.pos.x, self.player.pos.y)
+	self.map = Tiled.loadFromLuaFile("resources/world.lua")
 end
 
 function MainState:create_order()
@@ -99,9 +103,6 @@ function MainState:player_car_controls(dt)
 	if braking then
 		player.break_hold_time = player.break_hold_time + dt
 		friction = 1 - (1 - friction) ^ (1+player.break_hold_time*5)
-		print(friction)
-		-- print((1 - friction), player.break_hold_time)
-		-- print(math.pow((1 - friction), player.break_hold_time))
 	else
 		player.break_hold_time = 0
 	end
@@ -171,18 +172,27 @@ function MainState:draw()
 	love.graphics.print(tostring(self.orders_completed), 10, 10)
 	-- love.graphics.print(tostring(self.player.vel.length), 10, 40)
 
-	self.camera:attach()
+	self.camera:attach(nil, nil, nil, nil, true)
+	love.graphics.setColor(1, 1, 1, 1)
+	self.map:draw()
+	love.graphics.circle("fill", 0, 0, 5)
+
 	love.graphics.push()
 		love.graphics.translate(pos.x, pos.y)
-		love.graphics.rotate(look_dir.angle)
-		if love.keyboard.isDown("lshift") then
-			love.graphics.setColor(rgb(20, 20, 100))
-		else
-			love.graphics.setColor(rgb(20, 20, 200))
+		if DEBUG then
+			love.graphics.push()
+			love.graphics.rotate(look_dir.angle)
+			love.graphics.rectangle("fill", -size.x/2, -size.y/2, size.x, size.y)
+			love.graphics.rectangle("fill", size.x/2-look_dir_size.x/2, -look_dir_size.y/2, look_dir_size.x, look_dir_size.y)
+			love.graphics.line(0, 0, 30, 0)
+			love.graphics.pop()
 		end
-		love.graphics.rectangle("fill", -size.x/2, -size.y/2, size.x, size.y)
-		love.graphics.setColor(rgb(255, 255, 255))
-		love.graphics.rectangle("fill", size.x/2-look_dir_size.x/2, -look_dir_size.y/2, look_dir_size.x, look_dir_size.y)
+
+		-- local rotation_count = #van_quads
+		-- local van_idx = math.floor(((look_dir.angle + math.pi) / (2*math.pi) * rotation_count) + 0.5) % rotation_count + 1
+		-- local van_quad = van_quads[van_idx]
+		-- local _, _, van_width, van_height = van_quad:getViewport()
+		-- love.graphics.draw(van_spritesheet, van_quad, -van_width/2, -van_height/2 - 2)
 	love.graphics.pop()
 
 	love.graphics.setColor(rgb(20, 200, 200))

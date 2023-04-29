@@ -1,16 +1,47 @@
+---@diagnostic disable: duplicate-set-field, undefined-field, redundant-parameter
 --- Module resposible for scaling screen and centering contents
 -- while respecting ratios.
 -- @module ScreenScaler
 local ScreenScaler = {}
-
---- Boolean that determines that everything out of bounds of the scaled screen
--- should be hidden by a black screen
-ScreenScaler.hideOutOfBounds = true
-
--- This "Center" library will do most of the heavy lifting
-local Center = require("lib.center")
+local offsetX = 0
+local offsetY = 0
+local scale = 1
 
 local getRealDimensions = love.graphics.getDimensions
+
+local function applyScaling(screenWidth, screenHeight)
+	local scaleX = screenWidth  / ScreenScaler.width
+	local scaleY = screenHeight / ScreenScaler.height
+	scale = math.min(scaleX, scaleY)
+
+	offsetX = (screenWidth - ScreenScaler.width * scale)/2
+	offsetY = (screenHeight - ScreenScaler.height * scale)/2
+
+    -- local max_width = available_width
+    -- local max_height = available_height
+    -- if self._MAX_RELATIVE_WIDTH > 0 and available_width * self._MAX_RELATIVE_WIDTH < max_width then
+    --     max_width = available_width * self._MAX_RELATIVE_WIDTH
+    -- end
+    -- if self._MAX_RELATIVE_HEIGHT > 0 and available_height * self._MAX_RELATIVE_HEIGHT < max_height then
+    --     max_height = available_height * self._MAX_RELATIVE_HEIGHT
+    -- end
+    -- if self._MAX_WIDTH > 0 and self._MAX_WIDTH < max_width then
+    --     max_width = self._MAX_WIDTH
+    -- end
+    -- if self._MAX_HEIGHT > 0 and self._MAX_HEIGHT < max_height then
+    --     max_height = self._MAX_HEIGHT
+    -- end
+    -- if max_height / max_width > self._HEIGHT / self._WIDTH then
+    --     self._CANVAS_WIDTH = max_width
+    --     self._CANVAS_HEIGHT = self._CANVAS_WIDTH * (self._HEIGHT / self._WIDTH)
+    -- else
+    --     self._CANVAS_HEIGHT = max_height
+    --     self._CANVAS_WIDTH = self._CANVAS_HEIGHT * (self._WIDTH / self._HEIGHT)
+    -- end
+    -- self._SCALE = self._CANVAS_HEIGHT / self._HEIGHT
+    -- self._OFFSET_X = self._BORDERS.l + (available_width - self._CANVAS_WIDTH) / 2
+    -- self._OFFSET_Y = self._BORDERS.t + (available_height - self._CANVAS_HEIGHT) / 2
+end
 
 --- Set the "ideal" dimensions from which everything else will be scaled.
 -- @tparam number w virtual width
@@ -20,10 +51,10 @@ function ScreenScaler.setVirtualDimensions(w, h)
 	assert(type(h) == "number", "Expected height to be number")
 	ScreenScaler.width, ScreenScaler.height = nil, nil
 
-	-- Setup library resposible for scaling the screen
-	Center:setupScreen(w, h)
+	local screenWidth, screenHeight = love.graphics.getDimensions()
 
 	ScreenScaler.width, ScreenScaler.height = w, h
+	applyScaling(screenWidth, screenHeight)
 end
 
 --- Unsets virtual dimensions. Effectively disables scaler.
@@ -38,40 +69,14 @@ function ScreenScaler.getVirtualDimensions()
 	return ScreenScaler.width, ScreenScaler.height
 end
 
---- Get real window dimensions.
--- @return width, height
-function ScreenScaler.getRealDimensions()
-	return getRealDimensions()
-end
-
-function ScreenScaler.getScale()
-	return Center:getScale()
-end
-
-function ScreenScaler.getOffset()
-	return Center:getOffsetX(), Center:getOffsetY()
-end
-
 --- Returns true if scaler is enabled.
 -- @treturn boolean
 function ScreenScaler.isEnabled()
 	return ScreenScaler.width ~= nil
 end
 
-do
-	local translate = love.graphics.translate
-	local scale = love.graphics.scale
-	local origin = love.graphics.origin
-
-	function love.graphics.origin()
-		origin()
-		if Center.centered then
-			local ox, oy = Center:getOffsetX(), Center:getOffsetY()
-			local s = Center:getScale()
-			translate(ox, oy)
-			scale(s, s)
-		end
-	end
+function ScreenScaler.getOffset()
+	return offsetX, offsetY
 end
 
 -- Overwrite default love.mouse functions to return position
@@ -83,7 +88,7 @@ do
 		if not ScreenScaler.isEnabled() then
 			return x
 		end
-		return (x - Center:getOffsetX()) / Center:getScale()
+		return (x - offsetX) / scale
 	end
 
 	local getY = love.mouse.getY
@@ -92,13 +97,14 @@ do
 		if not ScreenScaler.isEnabled() then
 			return y
 		end
-		return (y - Center:getOffsetY()) / Center:getScale()
+		return (y - offsetY) / scale
 	end
 
 	local getPosition = love.mouse.getPosition
 	function love.mouse.getPosition()
 		if ScreenScaler.isEnabled() then
-			return Center:toGame(getPosition())
+			local x, y = getPosition()
+			return (x - offsetX) / scale, (y - offsetY) / scale
 		else
 			return getPosition()
 		end
@@ -128,10 +134,27 @@ end
 -- Adjust setScissor and intersectScissor function, so that they are relative
 -- to the scaled screen. By default these functions are unaffected by transformations
 do
+	local getScissor = love.graphics.getScissor
+	function love.graphics.getScissor()
+		local x, y, w, h = getScissor()
+		if x and ScreenScaler.isEnabled() then
+			x = (x - offsetX) / scale
+			y = (y - offsetY) / scale
+			w = w / scale
+			h = h / scale
+			return x, y, w, h
+		end
+	end
+
 	local setScissor = love.graphics.setScissor
 	function love.graphics.setScissor(x, y, w, h)
 		if x and ScreenScaler.isEnabled() then
-			setScissor(Center:toGame(x, y, w, h))
+			setScissor(
+				x * scale + offsetX,
+				y * scale + offsetY,
+				w * scale,
+				h * scale
+			)
 		else
 			setScissor(x, y, w, h)
 		end
@@ -140,7 +163,12 @@ do
 	local intersectScissor = love.graphics.intersectScissor
 	function love.graphics.intersectScissor(x, y, w, h)
 		if x and ScreenScaler.isEnabled() then
-			intersectScissor(Center:toGame(x, y, w, h))
+			intersectScissor(
+				(x - offsetX) / scale,
+				(y - offsetY) / scale,
+				w and w / scale,
+				h and h / scale
+			)
 		else
 			intersectScissor(x, y, w, h)
 		end
@@ -158,42 +186,26 @@ end
 -- If the user clicked out of bounds, it will not handled
 local eventPreProccessor = {}
 function eventPreProccessor.mousepressed(x, y, button, istouch, presses)
-	x, y = Center:toGame(x, y)
+	x = (x - offsetX) / scale
+	y = (y - offsetY) / scale
 	return isInBounds(x, y), x, y, button, istouch, presses
 end
 
 function eventPreProccessor.mousereleased(x, y, button, istouch, presses)
-	x, y = Center:toGame(x, y)
+	x = (x - offsetX) / scale
+	y = (y - offsetY) / scale
 	return isInBounds(x, y), x, y, button, istouch, presses
 end
 
 function eventPreProccessor.mousemoved(x, y, dx, dy, istouch)
-	local scale = Center:getScale()
-	x, y = Center:toGame(x, y)
+	x = (x - offsetX) / scale
+	y = (y - offsetY) / scale
 	dx, dy = dx / scale, dy / scale
 	return isInBounds(x, y), x, y, dx, dy, istouch, istouch
 end
 
 function eventPreProccessor.wheelmoved(x, y)
 	return isInBounds(love.mouse.getPosition()), x, y
-end
-
-local function hideOutOfBounds()
-	local r, g, b, a = love.graphics.getColor()
-	love.graphics.setColor(love.graphics.getBackgroundColor())
-	local w, h = getRealDimensions()
-
-	if Center._OFFSET_X ~= 0 then
-		love.graphics.rectangle("fill", 0, 0, Center._OFFSET_X, h)
-		love.graphics.rectangle("fill", Center._WIDTH*Center._SCALE+Center._OFFSET_X, 0, Center._OFFSET_X, h)
-	end
-
-	if Center._OFFSET_Y ~= 0 then
-		love.graphics.rectangle("fill", 0, 0, w, Center._OFFSET_Y)
-		love.graphics.rectangle("fill", 0, Center._HEIGHT*Center._SCALE+Center._OFFSET_Y, w, Center._OFFSET_Y)
-	end
-
-	love.graphics.setColor(r, g, b, a)
 end
 
 -- Modify core game loop so that if scaler is enabled:
@@ -222,7 +234,7 @@ function love.run()
 
 				if ScreenScaler.isEnabled() then
 					if name == "resize" then
-						Center:resize(a, b)
+						applyScaling(a, b)
 						goto continue
 					elseif eventPreProccessor[name] then
 						local success
@@ -247,12 +259,11 @@ function love.run()
 
 			if love.draw then
 				if ScreenScaler.isEnabled() then
-					Center:start()
+					love.graphics.push("transform")
+					love.graphics.translate(offsetX, offsetY)
+					love.graphics.scale(scale)
 					love.draw()
-					Center:finish()
-					if ScreenScaler.hideOutOfBounds then
-						hideOutOfBounds()
-					end
+					love.graphics.pop()
 				else
 					love.draw()
 				end
