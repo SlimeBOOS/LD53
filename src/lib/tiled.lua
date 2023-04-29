@@ -1,6 +1,7 @@
 local Tiled = {}
 
 local LAYER_TYPE_TILELAYER = 1
+local LAYER_TYPE_OBJECTGROUP = 2
 
 local FLIPPED_HORIZONTALLY_FLAG  = 0x80000000
 local FLIPPED_VERTICALLY_FLAG    = 0x40000000
@@ -69,7 +70,7 @@ local function renderLayerChunk(tiles, atlas, spriteBatch, chunk, tileWidth, til
 				tile = mask_high_gid_bits(tile)
 				local quad = atlas.quads[tile]
 				local x, y = transformToIsometric(tile_x, tile_y, tileWidth, tileHeight)
-				spriteBatch:add(quad, x - tiles[tile].width/2, y - tiles[tile].height + tileHeight)
+				spriteBatch:add(quad, x, y - tiles[tile].height + tileHeight)
 			end
 		end
 	end
@@ -110,27 +111,34 @@ function Map.new(map)
 			goto continue
 		end
 
+		local newLayer = {
+			name = layer.name,
+			visible = layer.visible,
+			offsetX = layer.offsetx or 0,
+			offsetY = layer.offsety or 0,
+			properties = layer.properties
+		}
+
 		if layer.type == "tilelayer" then
-			local chunks = {}
+			newLayer.type = LAYER_TYPE_TILELAYER
+			newLayer.chunks = {}
 			for _, chunk in ipairs(layer.chunks) do
 				local spriteBatch = love.graphics.newSpriteBatch(self.atlas.image)
 				renderLayerChunk(self.tiles, self.atlas, spriteBatch, chunk, self.tileWidth, self.tileHeight)
-				table.insert(chunks, {
+				table.insert(newLayer.chunks, {
 					spriteBatch = spriteBatch,
 					x = chunk.x,
 					y = chunk.y,
 					width = chunk.width,
-					height = chunk.height
+					height = chunk.height,
 				})
 			end
-
-			table.insert(self.layers, {
-				type = LAYER_TYPE_TILELAYER,
-				chunks = chunks,
-				visible = layer.visible
-			})
+		elseif layer.type == "objectgroup" then
+			newLayer.type = LAYER_TYPE_OBJECTGROUP
+			newLayer.objects = layer.objects
 		end
 
+		table.insert(self.layers, newLayer)
 		::continue::
 	end
 
@@ -145,7 +153,7 @@ local function drawTileLayer(layer, tileWidth, tileHeight)
 		local chunkHeight = chunk.height*tileHeight
 
 		local x, y = transformToIsometric(chunk.x/16, chunk.y/16, chunkWidth, chunkHeight)
-		love.graphics.draw(chunk.spriteBatch, x, y)
+		love.graphics.draw(chunk.spriteBatch, x + layer.offsetX, y + layer.offsetY)
 	end
 end
 
@@ -154,6 +162,14 @@ function Map:draw()
 		if layer.type == LAYER_TYPE_TILELAYER then
 			drawTileLayer(layer, self.tileWidth, self.tileHeight)
 			-- love.graphics.draw(layer.spriteBatch)
+		end
+	end
+end
+
+function Map:getLayer(name)
+	for _, layer in ipairs(self.layers) do
+		if layer.name == name then
+			return layer
 		end
 	end
 end

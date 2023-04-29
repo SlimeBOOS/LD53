@@ -52,9 +52,11 @@ local function get_used_ids(map)
 	local ids = {}
 	local tilesets = {}
 	for _, layer in ipairs(map.layers) do
-		for _, chunk in ipairs(layer.chunks) do
-			for _, tile in ipairs(chunk.data) do
-				insert_to_set(ids, tile)
+		if layer.type == "tilelayer" then
+			for _, chunk in ipairs(layer.chunks) do
+				for _, tile in ipairs(chunk.data) do
+					insert_to_set(ids, tile)
+				end
 			end
 		end
 	end
