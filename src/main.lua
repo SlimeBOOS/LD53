@@ -17,6 +17,6 @@ function love.load()
 	love.math.setRandomSeed(love.timer.getTime())
 	math.randomseed(love.timer.getTime())
 
-	Gamestate.switch(require("states.main"))
+	Gamestate.switch(require("states.start"))
 	Gamestate.registerEvents()
 end
