@@ -5,15 +5,27 @@
   <image width="99" height="85" source="kenney_isometric-buildings-1/buildingTiles_000.png"/>
  </tile>
  <tile id="1">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_001.png"/>
  </tile>
  <tile id="2">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_002.png"/>
  </tile>
  <tile id="3">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_003.png"/>
  </tile>
  <tile id="4">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_004.png"/>
  </tile>
  <tile id="5">
@@ -29,21 +41,36 @@
   <image width="99" height="85" source="kenney_isometric-buildings-1/buildingTiles_008.png"/>
  </tile>
  <tile id="9">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_009.png"/>
  </tile>
  <tile id="10">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_010.png"/>
  </tile>
  <tile id="11">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="128" source="kenney_isometric-buildings-1/buildingTiles_011.png"/>
  </tile>
  <tile id="12">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_012.png"/>
  </tile>
  <tile id="13">
   <image width="99" height="54" source="kenney_isometric-buildings-1/buildingTiles_013.png"/>
  </tile>
  <tile id="14">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_014.png"/>
  </tile>
  <tile id="15">
@@ -53,21 +80,39 @@
   <image width="99" height="85" source="kenney_isometric-buildings-1/buildingTiles_016.png"/>
  </tile>
  <tile id="17">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_017.png"/>
  </tile>
  <tile id="18">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_018.png"/>
  </tile>
  <tile id="19">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="128" source="kenney_isometric-buildings-1/buildingTiles_019.png"/>
  </tile>
  <tile id="20">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_020.png"/>
  </tile>
  <tile id="21">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_021.png"/>
  </tile>
  <tile id="22">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_022.png"/>
  </tile>
  <tile id="23">
@@ -77,21 +122,39 @@
   <image width="99" height="85" source="kenney_isometric-buildings-1/buildingTiles_024.png"/>
  </tile>
  <tile id="25">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="128" source="kenney_isometric-buildings-1/buildingTiles_025.png"/>
  </tile>
  <tile id="26">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_026.png"/>
  </tile>
  <tile id="27">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="130" source="kenney_isometric-buildings-1/buildingTiles_027.png"/>
  </tile>
  <tile id="28">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_028.png"/>
  </tile>
  <tile id="29">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_029.png"/>
  </tile>
  <tile id="30">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_030.png"/>
  </tile>
  <tile id="31">
@@ -101,18 +164,33 @@
   <image width="99" height="85" source="kenney_isometric-buildings-1/buildingTiles_032.png"/>
  </tile>
  <tile id="33">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="128" source="kenney_isometric-buildings-1/buildingTiles_033.png"/>
  </tile>
  <tile id="34">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_034.png"/>
  </tile>
  <tile id="35">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="130" source="kenney_isometric-buildings-1/buildingTiles_035.png"/>
  </tile>
  <tile id="36">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_036.png"/>
  </tile>
  <tile id="37">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_037.png"/>
  </tile>
  <tile id="38">
@@ -122,12 +200,21 @@
   <image width="99" height="85" source="kenney_isometric-buildings-1/buildingTiles_039.png"/>
  </tile>
  <tile id="40">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="130" source="kenney_isometric-buildings-1/buildingTiles_040.png"/>
  </tile>
  <tile id="41">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_041.png"/>
  </tile>
  <tile id="42">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_042.png"/>
  </tile>
  <tile id="43">
@@ -140,6 +227,9 @@
   <image width="99" height="85" source="kenney_isometric-buildings-1/buildingTiles_045.png"/>
  </tile>
  <tile id="46">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="130" source="kenney_isometric-buildings-1/buildingTiles_046.png"/>
  </tile>
  <tile id="47">
@@ -257,6 +347,9 @@
   <image width="99" height="63" source="kenney_isometric-buildings-1/buildingTiles_084.png"/>
  </tile>
  <tile id="85">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_085.png"/>
  </tile>
  <tile id="86">
@@ -278,9 +371,15 @@
   <image width="99" height="61" source="kenney_isometric-buildings-1/buildingTiles_091.png"/>
  </tile>
  <tile id="92">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_092.png"/>
  </tile>
  <tile id="93">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_093.png"/>
  </tile>
  <tile id="94">
@@ -299,12 +398,21 @@
   <image width="99" height="63" source="kenney_isometric-buildings-1/buildingTiles_098.png"/>
  </tile>
  <tile id="99">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_099.png"/>
  </tile>
  <tile id="100">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_100.png"/>
  </tile>
  <tile id="101">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_101.png"/>
  </tile>
  <tile id="102">
@@ -320,15 +428,27 @@
   <image width="99" height="61" source="kenney_isometric-buildings-1/buildingTiles_105.png"/>
  </tile>
  <tile id="106">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_106.png"/>
  </tile>
  <tile id="107">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_107.png"/>
  </tile>
  <tile id="108">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_108.png"/>
  </tile>
  <tile id="109">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_109.png"/>
  </tile>
  <tile id="110">
@@ -341,18 +461,33 @@
   <image width="99" height="63" source="kenney_isometric-buildings-1/buildingTiles_112.png"/>
  </tile>
  <tile id="113">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_113.png"/>
  </tile>
  <tile id="114">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_114.png"/>
  </tile>
  <tile id="115">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_115.png"/>
  </tile>
  <tile id="116">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_116.png"/>
  </tile>
  <tile id="117">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_117.png"/>
  </tile>
  <tile id="118">
@@ -368,15 +503,27 @@
   <image width="99" height="54" source="kenney_isometric-buildings-1/buildingTiles_121.png"/>
  </tile>
  <tile id="122">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="133" height="127" source="kenney_isometric-buildings-1/buildingTiles_122.png"/>
  </tile>
  <tile id="123">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_123.png"/>
  </tile>
  <tile id="124">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_124.png"/>
  </tile>
  <tile id="125">
+  <properties>
+   <property name="tall" type="bool" value="true"/>
+  </properties>
   <image width="132" height="127" source="kenney_isometric-buildings-1/buildingTiles_125.png"/>
  </tile>
  <tile id="126">

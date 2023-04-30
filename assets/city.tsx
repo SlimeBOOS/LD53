@@ -32,6 +32,9 @@
   <image width="71" height="64" source="kenney_isometric-city/cityDetails_009.png"/>
  </tile>
  <tile id="138">
+  <properties>
+   <property name="tree" type="bool" value="true"/>
+  </properties>
   <image width="32" height="45" source="kenney_isometric-city/cityDetails_010.png"/>
  </tile>
  <tile id="139">
@@ -236,6 +239,9 @@
   <image width="132" height="101" source="kenney_isometric-city/cityTiles_066.png"/>
  </tile>
  <tile id="206">
+  <properties>
+   <property name="test" type="bool" value="true"/>
+  </properties>
   <image width="132" height="113" source="kenney_isometric-city/cityTiles_067.png"/>
  </tile>
  <tile id="207">

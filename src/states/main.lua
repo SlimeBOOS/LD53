@@ -22,10 +22,12 @@ local function boolToNumber(x)
 	return x and 1 or 0
 end
 
-local function transformFromIsometric(x, y, tileW)
-	local newX = x   - y
-	local newY = x/2 + y/2
-	return newX + tileW/2, newY
+local function addIsometricRectToWorld(map, collider_world, x, y, w, h)
+	local px1, py1 = map:fromIsometricSpace(x, y)
+	local px2, py2 = map:fromIsometricSpace(x + w, y)
+	local px3, py3 = map:fromIsometricSpace(x + w, y + h)
+	local px4, py4 = map:fromIsometricSpace(x, y + h)
+	return collider_world:polygon(px1, py1, px2, py2, px3, py3, px4, py4)
 end
 
 function MainState:init()
@@ -38,14 +40,57 @@ function MainState:init()
 
 	self.collider_world = HC.new(self.map.tileWidth*4)
 	self.building_colliders = {}
-	local tileWidth = self.map.tileWidth
 	for _, obj in ipairs(self.map:getLayer("Building collisions").objects) do
-		local px1, py1 = transformFromIsometric(obj.x, obj.y, tileWidth)
-		local px2, py2 = transformFromIsometric(obj.x+obj.width, obj.y, tileWidth)
-		local px3, py3 = transformFromIsometric(obj.x+obj.width, obj.y+obj.height, tileWidth)
-		local px4, py4 = transformFromIsometric(obj.x, obj.y+obj.height, tileWidth)
-		local rect = self.collider_world:polygon(px1, py1, px2, py2, px3, py3, px4, py4)
-		table.insert(self.building_colliders, rect)
+		local collider
+		if obj.shape == "rectangle" then
+			collider = addIsometricRectToWorld(self.map, self.collider_world, obj.x, obj.y, obj.width, obj.height)
+		elseif obj.shape == "ellipse" then
+			local px, py = self.map:fromIsometricSpace(obj.x, obj.y)
+			local radius = (obj.width + obj.height)/2
+			collider = self.collider_world:circle(px, py, radius)
+		end
+		table.insert(self.building_colliders, collider)
+	end
+
+	local ground_layer = self.map:getLayer("Ground")
+	for _, chunk in ipairs(ground_layer.chunks) do
+		for idx, tileId in ipairs(chunk.tiles) do
+			if tileId > 0 then
+				local tile = self.map.tiles[tileId]
+				if tile.properties and tile.properties.tall then
+					local tileX = chunk.x + (idx-1) % chunk.width
+					local tileY = chunk.y + math.floor((idx-1) / chunk.width)
+					local x, y = self.map:fromTileCoords(tileX - 0.05, tileY-1 - 0.1)
+					x = x + ground_layer.offsetX
+					y = y + ground_layer.offsetY
+					local x, y = self.map:toIsometricSpace(x, y)
+
+					local collider = addIsometricRectToWorld(self.map, self.collider_world, x, y, 64, 64)
+					table.insert(self.building_colliders, collider)
+				end
+			end
+		end
+	end
+
+	for _, layer in ipairs{self.map:getLayer("Decorations"), self.map:getLayer("Decorations 2")} do
+		for _, chunk in ipairs(layer.chunks) do
+			for idx, tileId in ipairs(chunk.tiles) do
+				if tileId > 0 then
+					local tile = self.map.tiles[tileId]
+					if tile.properties and tile.properties.tree then
+						local tileX = chunk.x + (idx-1) % chunk.width
+						local tileY = chunk.y + math.floor((idx-1) / chunk.width)
+						local x, y = self.map:fromTileCoords(tileX+1.05, tileY+0.8)
+						x = x + layer.offsetX
+						y = y + layer.offsetY
+
+						local collider = self.collider_world:circle(x, y, 8.5)
+						table.insert(self.building_colliders, collider)
+					end
+				end
+			end
+		end
+		-- table.insert(self.building_colliders, collider)
 	end
 
 	self.active_orders = {}
@@ -53,8 +98,9 @@ function MainState:init()
 	self.holding_orders = {}
 	self.orders_completed = 0
 
+	local player_spawnpoint = self.map:getLayer("Player spawnpoint").objects[1]
 	self.player = {
-		pos = Vec(100, 100),
+		pos = Vec(self.map:fromIsometricSpace(player_spawnpoint.x, player_spawnpoint.y)),
 		vel = Vec(0, 0),
 		move_dir = Vec(),
 		look_dir = Vec(1, 0),
@@ -76,6 +122,8 @@ function MainState:init()
 end
 
 function MainState:create_order()
+	if #self.delivery_points == 0 then return end
+
 	local from = 1+math.floor(love.math.random() * #self.delivery_points)
 	local to = from
 	while from == to do
@@ -94,7 +142,7 @@ function MainState:player_car_controls(dt)
 
 	local turn    = boolToNumber(love.keyboard.isDown("d")) - boolToNumber(love.keyboard.isDown("a"))
 	local thrust  = boolToNumber(love.keyboard.isDown("w")) - boolToNumber(love.keyboard.isDown("s")) * 0.5
-	local braking = love.keyboard.isDown("j")
+	local braking = love.keyboard.isDown("lshift")
 
 	local friction = 1
 	local turn_speed = math.pi
@@ -172,13 +220,13 @@ function MainState:keypressed(key)
 	if key == "escape" then
 		love.event.quit()
 	elseif key == "w" then
-		local now = love.timer.getTime()
-		local diff = now - self.player.last_forward_press
-		self.player.last_forward_press = now
-		local braking = love.keyboard.isDown("j")
-		if diff <= 0.5 and self.player.vel.length < 120 and not braking then
-			self.player.vel = self.player.move_dir * 300
-		end
+		-- local now = love.timer.getTime()
+		-- local diff = now - self.player.last_forward_press
+		-- self.player.last_forward_press = now
+		-- local braking = love.keyboard.isDown("lshift")
+		-- if diff <= 0.5 and self.player.vel.length < 120 and not braking then
+		-- 	self.player.vel = self.player.move_dir * 300
+		-- end
 	elseif key == "k" then
 		local picked_up_orders = {}
 		for _, order in ipairs(self.sitting_orders) do
@@ -208,39 +256,89 @@ function MainState:keypressed(key)
 	end
 end
 
-function MainState:draw()
+function MainState:drawPlayer()
 	local pos = self.player.pos
 	local look_dir = self.player.look_dir
 	local size = Vec(30, 30)
+
+	love.graphics.push()
+
+	love.graphics.translate(pos.x, pos.y)
+	if DEBUG then
+		love.graphics.push()
+		love.graphics.rotate(look_dir.angle)
+		love.graphics.rectangle("fill", -size.x/2, -size.y/2, size.x, size.y)
+		love.graphics.line(0, 0, 30, 0)
+		love.graphics.pop()
+
+		local move_dir = self.player.move_dir
+		love.graphics.push()
+		love.graphics.rotate(move_dir.angle)
+		love.graphics.setColor(rgb(150, 20, 20))
+		love.graphics.line(0, 0, 30, 0)
+		love.graphics.pop()
+	end
+
+	love.graphics.setColor(1, 1, 1, 1)
+	local rotation_count = #player_images
+	local image_idx = math.floor((look_dir.angle / (2*math.pi) * rotation_count) + 0.5) % rotation_count + 1
+	local player_image = player_images[image_idx]
+	local image_width, image_height = player_image:getDimensions()
+	love.graphics.draw(player_image, -image_width/2, -image_height/2)
+
+	love.graphics.pop()
+end
+
+function MainState:highlightIsometricTile(tileX, tileY)
+	local px1, py1 = self.map:fromTileCoords(tileX, tileY)
+	local px2, py2 = self.map:fromTileCoords(tileX+1, tileY)
+	local px3, py3 = self.map:fromTileCoords(tileX+1, tileY+1)
+	local px4, py4 = self.map:fromTileCoords(tileX, tileY+1)
+	love.graphics.setColor(rgb(255, 0, 0))
+	love.graphics.line(px1, py1, px2, py2, px3, py3, px4, py4, px1, py1)
+end
+
+function MainState:drawTallTileAt(tileX, tileY)
+	local tile = self.map:getTileAt("Ground", tileX, tileY)
+	local is_tall = (tile and tile.properties and tile.properties.tall) == true
+	if is_tall then
+		self.map:drawTileAt(tileX, tileY)
+	end
+end
+
+local shader = love.graphics.newShader([[
+vec4 effect(vec4 color, Image tex, vec2 texture_coords, vec2 screen_coords)
+{
+    vec4 texturecolor = Texel(tex, texture_coords);
+    if (texturecolor.a < 0.5)
+      discard;
+    return texturecolor;
+}
+]])
+
+function MainState:draw()
+	local pos = self.player.pos
 
 	self.camera:attach(nil, nil, nil, nil, true)
 	love.graphics.setColor(1, 1, 1, 1)
 	self.map:drawLayer(self.map.layers[1])
 
-	love.graphics.push()
-		love.graphics.translate(pos.x, pos.y)
-		if DEBUG then
-			love.graphics.push()
-			love.graphics.rotate(look_dir.angle)
-			love.graphics.rectangle("fill", -size.x/2, -size.y/2, size.x, size.y)
-			love.graphics.line(0, 0, 30, 0)
-			love.graphics.pop()
+	love.graphics.stencil(function()
+		love.graphics.setShader(shader)
+		local playerTileX, playerTileY = self.map:toTileCoords(self.player.pos.x, self.player.pos.y+20)
+		playerTileX = math.floor(playerTileX)
+		playerTileY = math.floor(playerTileY)
+		self:drawTallTileAt(playerTileX+1, playerTileY)
+		self:drawTallTileAt(playerTileX,   playerTileY+1)
+		self:drawTallTileAt(playerTileX,   playerTileY+2)
+		self:drawTallTileAt(playerTileX+1, playerTileY+1)
+		self:drawTallTileAt(playerTileX+1, playerTileY+2)
+		love.graphics.setShader()
+	end, "replace", 1)
 
-			local move_dir = self.player.move_dir
-			love.graphics.push()
-			love.graphics.rotate(move_dir.angle)
-			love.graphics.setColor(rgb(150, 20, 20))
-			love.graphics.line(0, 0, 30, 0)
-			love.graphics.pop()
-		end
-
-		love.graphics.setColor(1, 1, 1, 1)
-		local rotation_count = #player_images
-		local image_idx = math.floor((look_dir.angle / (2*math.pi) * rotation_count) + 0.5) % rotation_count + 1
-		local player_image = player_images[image_idx]
-		local image_width, image_height = player_image:getDimensions()
-		love.graphics.draw(player_image, -image_width/2, -image_height/2)
-	love.graphics.pop()
+	love.graphics.setStencilTest("equal", 0)
+	self:drawPlayer()
+	love.graphics.setStencilTest()
 
 	self.map:draw(2)
 

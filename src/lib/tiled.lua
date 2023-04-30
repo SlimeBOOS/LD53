@@ -46,7 +46,8 @@ local function loadTileset(filename)
 			width = tile.width,
 			height = tile.height,
 			id = tile.id,
-			image = love.graphics.newImage(tile.image)
+			image = love.graphics.newImage(tile.image),
+			properties = tile.properties
 		})
 	end
 
@@ -97,7 +98,8 @@ function Map.new(map)
 			self.atlas:add(tile.image, id)
 			self.tiles[id] = {
 				width = tile.width,
-				height = tile.height
+				height = tile.height,
+				properties = tile.properties
 			}
 		end
 	end
@@ -131,6 +133,7 @@ function Map.new(map)
 					y = chunk.y,
 					width = chunk.width,
 					height = chunk.height,
+					tiles = chunk.data
 				})
 			end
 		elseif layer.type == "objectgroup" then
@@ -154,6 +157,67 @@ local function drawTileLayer(layer, tileWidth, tileHeight)
 
 		local x, y = transformToIsometric(chunk.x/16, chunk.y/16, chunkWidth, chunkHeight)
 		love.graphics.draw(chunk.spriteBatch, x + layer.offsetX, y + layer.offsetY)
+	end
+end
+
+function Map:fromIsometricSpace(x, y)
+	local newX = x   - y
+	local newY = x/2 + y/2
+	return newX + self.tileWidth/2, newY
+end
+
+function Map:toIsometricSpace(x, y)
+	x = x - self.tileWidth/2
+	local newX =  x/2 + y
+	local newY = -x/2 + y
+	return newX, newY
+end
+
+function Map:toTileCoords(x, y)
+	local x, y = self:toIsometricSpace(x, y)
+	return x/self.tileHeight + 0.5, y/self.tileHeight - 0.5
+end
+
+function Map:fromTileCoords(tileX, tileY)
+	return self:fromIsometricSpace((tileX - 0.5) * self.tileHeight, (tileY + 0.5) * self.tileHeight)
+end
+
+local function getChunkAt(chunks, tileX, tileY)
+	for _, chunk in ipairs(chunks) do
+		if (chunk.x <= tileX and tileX < chunk.x + chunk.width) and
+			(chunk.y <= tileY and tileY < chunk.y + chunk.height) then
+			return chunk
+		end
+	end
+end
+
+function Map:getTileAt(layerName, tileX, tileY)
+	local layer = self:getLayer(layerName)
+	if not layer then return end
+
+	local chunk = getChunkAt(layer.chunks, tileX, tileY)
+	local tile = chunk.tiles[(tileY - chunk.y) * chunk.width + (tileX - chunk.x) + 1]
+	return self.tiles[tile]
+end
+
+function Map:drawTileAt(tileX, tileY)
+	local x, y = self:fromTileCoords(tileX, tileY)
+
+	for _, layer in ipairs(self.layers) do
+		if layer.type == LAYER_TYPE_TILELAYER then
+			local chunk = getChunkAt(layer.chunks, tileX, tileY)
+			if chunk then
+				local tile = chunk.tiles[(tileY - chunk.y) * chunk.width + (tileX - chunk.x) + 1]
+				if tile > 0 then
+					tile = mask_high_gid_bits(tile)
+					love.graphics.draw(self.atlas.image,
+						self.atlas.quads[tile],
+						x + layer.offsetX,
+						y - self.tiles[tile].height + self.tileHeight + layer.offsetY
+					)
+				end
+			end
+		end
 	end
 end
 
