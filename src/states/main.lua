@@ -30,6 +30,19 @@ local function addIsometricRectToWorld(map, collider_world, x, y, w, h)
 	return collider_world:polygon(px1, py1, px2, py2, px3, py3, px4, py4)
 end
 
+local function getRegionsAt(regions, x, y)
+	local found_regions = {}
+	for _, region in pairs(regions) do
+		for _, rect in ipairs(region.rects) do
+			if (rect.x <= x and x < rect.x + rect.width) and (rect.y <= y and y < rect.y + rect.height) then
+				table.insert(found_regions, region)
+				break
+			end
+		end
+	end
+	return found_regions
+end
+
 function MainState:init()
 	self.map = Tiled.loadFromLuaFile("resources/world.lua")
 
@@ -52,6 +65,7 @@ function MainState:init()
 		table.insert(self.building_colliders, collider)
 	end
 
+	self.houses = {}
 	local ground_layer = self.map:getLayer("Ground")
 	for _, chunk in ipairs(ground_layer.chunks) do
 		for idx, tileId in ipairs(chunk.tiles) do
@@ -63,6 +77,7 @@ function MainState:init()
 					local x, y = self.map:fromTileCoords(tileX - 0.05, tileY-1 - 0.1)
 					x = x + ground_layer.offsetX
 					y = y + ground_layer.offsetY
+					table.insert(self.houses, { pos = Vec(x, y + self.map.tileHeight/2), regions = {} })
 					local x, y = self.map:toIsometricSpace(x, y)
 
 					local collider = addIsometricRectToWorld(self.map, self.collider_world, x, y, 64, 64)
@@ -93,6 +108,39 @@ function MainState:init()
 		-- table.insert(self.building_colliders, collider)
 	end
 
+	local region_lookup = {}
+	self.regions = {}
+	for _, obj in ipairs(self.map:getLayer("Regions").objects) do
+		local region_name = obj.properties and obj.properties.region_name
+		assert(region_name ~= nil, "Region name not defined at (%f %f %f %f)", obj.x, obj.y, obj.width, obj.height)
+
+		local region = region_lookup[region_name]
+		if not region then
+			region = {
+				name = region_name,
+				rects = {},
+				houses = {}
+			}
+			table.insert(self.regions, region)
+			region_lookup[region_name] = region
+		end
+		table.insert(region.rects, obj)
+	end
+
+	for _, house in ipairs(self.houses) do
+		local house_x, house_y = self.map:toIsometricSpace(house.pos.x, house.pos.y)
+		local regions = getRegionsAt(self.regions, house_x, house_y)
+		assert(#regions > 0, ("House at (%f %f) isin't in a region"):format(house_x, house_y))
+		for _, region in ipairs(regions) do
+			table.insert(region.houses, house)
+			table.insert(house.regions, region)
+		end
+	end
+
+	for name, region in pairs(self.regions) do
+		assert(#region.houses > 0, ("No houses in '%s' regions"):format(name))
+	end
+
 	self.active_orders = {}
 	self.sitting_orders = {}
 	self.holding_orders = {}
@@ -110,32 +158,40 @@ function MainState:init()
 	}
 	self.player.collider = self.collider_world:circle(self.player.pos.x, self.player.pos.y, 10)
 
-	self:create_order()
-	self:create_order()
-	self:create_order()
+	self:create_order_at_player()
+	self:create_order_at_player()
+	self:create_order_at_player()
 
 	self.create_order_timer = Timer.every(1, function()
-		self:create_order()
+		self:create_order_at_player()
 	end)
 
 	self.camera = Camera(self.player.pos.x, self.player.pos.y)
 end
 
-function MainState:create_order()
-	if #self.delivery_points == 0 then return end
-
-	local from = 1+math.floor(love.math.random() * #self.delivery_points)
-	local to = from
-	while from == to do
-		to = 1+math.floor(love.math.random() * #self.delivery_points)
+function MainState:create_order_at_player()
+	local x, y = self.map:toIsometricSpace(self.player.pos.x, self.player.pos.y)
+	local regions = getRegionsAt(self.regions, x, y)
+	if #regions == 0 then
+		regions = self.regions
 	end
 
-	local order = {
-		from = from, to = to
-	}
+	self:create_order_in_region(regions[love.math.random(1, #regions)])
+end
+
+function MainState:create_order_in_region(region)
+	local from_house = region.houses[love.math.random(1, #region.houses)]
+	local to_house_region = from_house.regions[love.math.random(1, #from_house.regions)]
+	local to_house = from_house
+	while from_house == to_house do
+		to_house = to_house_region.houses[love.math.random(1, #to_house_region.houses)]
+	end
+
+	local order = { from_house = from_house, to_house = to_house }
 	table.insert(self.active_orders, order)
 	table.insert(self.sitting_orders, order)
 end
+
 
 function MainState:player_car_controls(dt)
 	local player = self.player
@@ -227,11 +283,10 @@ function MainState:keypressed(key)
 		-- if diff <= 0.5 and self.player.vel.length < 120 and not braking then
 		-- 	self.player.vel = self.player.move_dir * 300
 		-- end
-	elseif key == "k" then
+	elseif key == "space" then
 		local picked_up_orders = {}
 		for _, order in ipairs(self.sitting_orders) do
-			local point = self.delivery_points[order.from]
-			if (point - self.player.pos).length < 100 then
+			if (order.from_house.pos - self.player.pos).length < 100 then
 				table.insert(picked_up_orders, order)
 			end
 		end
@@ -243,8 +298,7 @@ function MainState:keypressed(key)
 
 		local dropped_orders = {}
 		for _, order in ipairs(self.holding_orders) do
-			local point = self.delivery_points[order.to]
-			if (point - self.player.pos).length < 100 then
+			if (order.to_house.pos - self.player.pos).length < 100 then
 				table.insert(dropped_orders, order)
 			end
 		end
@@ -252,7 +306,7 @@ function MainState:keypressed(key)
 			lume.remove(self.active_orders, order)
 			lume.remove(self.holding_orders, order)
 		end
-		self.orders_completed = self.orders_completed  + #dropped_orders
+		self.orders_completed = self.orders_completed + #dropped_orders
 	end
 end
 
@@ -355,8 +409,8 @@ function MainState:draw()
 	end
 
 	love.graphics.setColor(rgb(20, 200, 200))
-	for _, point in ipairs(self.delivery_points) do
-		love.graphics.circle("fill", point.x, point.y, 20)
+	for _, house in ipairs(self.houses) do
+		love.graphics.circle("fill", house.pos.x, house.pos.y, 20)
 	end
 
 	love.graphics.setColor(rgb(20, 100, 100))
@@ -365,35 +419,31 @@ function MainState:draw()
 	end
 
 	do
-		local deliveries_per_point = {}
+		local orders_per_house = {}
 		for _, order in ipairs(self.sitting_orders) do
-			deliveries_per_point[order.from] = deliveries_per_point[order.from] or {}
-			deliveries_per_point[order.to] = deliveries_per_point[order.to] or {}
+			orders_per_house[order.from_house] = orders_per_house[order.from_house] or {}
 
-			table.insert(deliveries_per_point[order.from], order)
+			table.insert(orders_per_house[order.from_house], order)
 		end
 		love.graphics.setColor(rgb(20, 100, 100))
-		for point_idx, orders in pairs(deliveries_per_point) do
-			local pos = self.delivery_points[point_idx]
+		for house, orders in pairs(orders_per_house) do
 			for i = 0, #orders - 1 do
-				love.graphics.circle("fill", pos.x + i * 12, pos.y - 30, 5)
+				love.graphics.circle("fill", house.pos.x + i * 12, house.pos.y - 30, 5)
 			end
 		end
 	end
 
 	do
-		local deliveries_per_point = {}
+		local orders_per_house = {}
 		for _, order in ipairs(self.holding_orders) do
-			deliveries_per_point[order.from] = deliveries_per_point[order.from] or {}
-			deliveries_per_point[order.to] = deliveries_per_point[order.to] or {}
+			orders_per_house[order.to_house] = orders_per_house[order.to_house] or {}
 
-			table.insert(deliveries_per_point[order.to], order)
+			table.insert(orders_per_house[order.to_house], order)
 		end
 		love.graphics.setColor(rgb(100, 20, 100))
-		for point_idx, orders in pairs(deliveries_per_point) do
-			local pos = self.delivery_points[point_idx]
+		for house, orders in pairs(orders_per_house) do
 			for i = 0, #orders - 1 do
-				love.graphics.circle("fill", pos.x + i * 12, pos.y - 45, 5)
+				love.graphics.circle("fill", house.pos.x + i * 12, house.pos.y - 30, 5)
 			end
 		end
 	end

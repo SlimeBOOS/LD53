@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.9" tiledversion="1.9.2" orientation="isometric" renderorder="right-down" width="30" height="20" tilewidth="128" tileheight="64" infinite="1" nextlayerid="12" nextobjectid="217">
+<map version="1.9" tiledversion="1.9.2" orientation="isometric" renderorder="right-down" width="30" height="20" tilewidth="128" tileheight="64" infinite="1" nextlayerid="13" nextobjectid="228">
  <tileset firstgid="1" source="city.tsx"/>
  <tileset firstgid="268" source="buildings.tsx"/>
  <tileset firstgid="397" source="landscape.tsx"/>
@@ -547,7 +547,7 @@
 591,591,591,584,584,592,592,214,214,221,214,214,214,214,214,226
 </chunk>
    <chunk x="0" y="0" width="16" height="16">
-214,600,600,214,226,227,214,214,214,214,214,214,145,214,214,592,
+207,600,600,214,226,227,214,214,214,214,214,214,145,214,214,592,
 214,214,310,183,196,196,214,214,214,214,214,214,145,214,214,592,
 214,305,302,214,226,227,214,214,214,214,214,214,145,214,214,592,
 298,214,214,214,226,227,214,214,214,214,214,214,145,214,214,214,
@@ -1902,9 +1902,6 @@
   <object id="202" x="-1093.38" y="-1416.75" width="197.917" height="5.16767"/>
   <object id="203" x="-1286.54" y="-586.001" width="390.417" height="5.16767"/>
   <object id="204" x="-1295.21" y="-704.584" width="4.417" height="126.168"/>
-  <object id="205" x="-356.5" y="-1379.25" width="133" height="127.5">
-   <ellipse/>
-  </object>
   <object id="206" x="-1239" y="-3287" width="342.5" height="24"/>
   <object id="209" x="-1109.75" y="-3031.5" width="156" height="24"/>
   <object id="210" x="-979.75" y="-1940" width="22.75" height="146.75"/>
@@ -1914,11 +1911,33 @@
   <object id="214" x="544.833" y="796.917" width="46.3333" height="63.5"/>
   <object id="215" x="479.333" y="734.917" width="62.5" height="63.5"/>
   <object id="216" x="413" y="748.583" width="65.8333" height="49.6667"/>
+  <object id="220" x="-318" y="-1373.67" width="60.8333" height="10"/>
+  <object id="223" x="-242.833" y="-1351.42" width="17.1666" height="67.3333"/>
+  <object id="224" x="-350.583" y="-1351.67" width="17.1666" height="67.3333"/>
+  <object id="225" x="-332.333" y="-1362.92" width="91.3333" height="97.8333"/>
+  <object id="226" x="-322.75" y="-1265.33" width="60.8333" height="10"/>
+  <object id="227" x="-1478.5" y="-1685.5" width="11.75" height="35.25"/>
+ </objectgroup>
+ <objectgroup id="12" name="Regions" tintcolor="#000000">
+  <object id="217" x="-2070.79" y="-3130.24" width="1845.76" height="1114.85">
+   <properties>
+    <property name="region_name" value="right"/>
+   </properties>
+  </object>
+  <object id="218" x="-850.576" y="-3182.58" width="1559.03" height="1987.58">
+   <properties>
+    <property name="region_name" value="right"/>
+   </properties>
+  </object>
+  <object id="219" x="-372.545" y="-288.638" width="1289.33" height="795.156">
+   <properties>
+    <property name="region_name" value="left"/>
+   </properties>
+  </object>
  </objectgroup>
  <objectgroup id="10" name="Player spawnpoint">
   <object id="30" x="-319.939" y="-235.697">
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="7" name="Delivery points"/>
 </map>
