@@ -22,15 +22,18 @@ local player_images = {
 
 local pending_order_icon = love.graphics.newImage("resources/icons/emote_circle.png")
 local order_delivery_icon = love.graphics.newImage("resources/icons/emote_cash.png")
+local order_delivery_marker = love.graphics.newImage("resources/icons/order_marker.png")
 local default_font = love.graphics.newFont("resources/MontserratMedium.ttf", 32)
 local smoke_particle = love.graphics.newImage("resources/smoke.png")
+local engine_sound = love.audio.newSource("resources/engine-sound.wav", "static")
+engine_sound:setLooping(true)
+engine_sound:setVolume(0)
 local smoke_psystem = love.graphics.newParticleSystem(smoke_particle, 32)
-smoke_psystem:setParticleLifetime(2, 5) -- Particles live at least 2s and at most 5s.
+smoke_psystem:setParticleLifetime(2, 5)
 smoke_psystem:setEmissionRate(5)
 smoke_psystem:setSizes(0.1, 0.15, 0.3)
 smoke_psystem:setSizeVariation(1)
-smoke_psystem:setLinearAcceleration(-20, -20, 20, 20) -- Random movement in all directions.
-smoke_psystem:setColors(1, 1, 1, 1, 1, 1, 1, 0) -- Fade to transparency.
+smoke_psystem:setColors(1, 1, 1, 1, 1, 1, 1, 0)
 
 local function boolToNumber(x)
 	return x and 1 or 0
@@ -58,6 +61,7 @@ local function getRegionsAt(regions, x, y)
 end
 
 function MainState:init()
+	engine_sound:play()
 	self.map = Tiled.loadFromLuaFile("resources/world.lua")
 
 	self.collider_world = HC.new(self.map.tileWidth*4)
@@ -243,7 +247,6 @@ function MainState:create_order_in_region(region)
 	return order
 end
 
-
 function MainState:player_car_controls(dt)
 	local player = self.player
 
@@ -298,6 +301,9 @@ function MainState:player_car_controls(dt)
 	else
 		player.break_hold_time = 0
 	end
+
+	local velocity = player.vel.length
+	engine_sound:setVolume(0.1+math.min(velocity/100, 0.4))
 
 	player.vel = player.vel * (1 - math.min(friction, 1)) ^ dt
 	player.vel = player.vel + acc * dt
@@ -401,7 +407,9 @@ function MainState:drawPlayer()
 	if velocity > 50 then
 		local snapped_look_dir = math.pi + (image_idx - 1) / rotation_count * math.pi*2
 		local exhaust_offset = Vec(-image_width/2, image_height/2):angled(snapped_look_dir)
+		local acc_dir = Vec(30, 0):angled(snapped_look_dir)
 		smoke_psystem:setPosition(pos.x + exhaust_offset.x, pos.y + exhaust_offset.y)
+		smoke_psystem:setLinearAcceleration(acc_dir.x, acc_dir.y)
 		smoke_psystem:start()
 	else
 		smoke_psystem:stop()
@@ -460,6 +468,16 @@ function MainState:draw()
 	self:drawPlayer()
 	love.graphics.setStencilTest()
 
+	for _, order in ipairs(self.holding_orders) do
+		local diff = order.to_house.pos - pos
+		local offset = diff.normalized * 30
+		local opacity = lume.clamp((diff.length-300)/400, 0, 1)
+		love.graphics.setColor(1, 1, 1, opacity)
+		local w, h = order_delivery_marker:getDimensions()
+		love.graphics.draw(order_delivery_marker, pos.x + offset.x -w/2, pos.y + offset.y - h/2)
+	end
+
+	love.graphics.setColor(1, 1, 1, 1)
 	self.map:draw(2)
 
 	if DEBUG then
