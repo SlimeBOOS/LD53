@@ -32509,7 +32509,7 @@ return {
         0
       },
       type = "objectgroup",
-      visible = true
+      visible = false
     },
     {
       class = "",
@@ -32527,8 +32527,8 @@ return {
           shape = "point",
           visible = true,
           width = 0,
-          x = -319.93900000000002,
-          y = -235.697
+          x = 265.06099999999998,
+          y = 339.303
         }
       },
       offsetx = 0,

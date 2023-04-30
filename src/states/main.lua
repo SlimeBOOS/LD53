@@ -3,11 +3,13 @@ local Timer = require("lib.hump.timer")
 local Camera = require("lib.hump.camera")
 local Tiled = require("lib.tiled")
 local HC = require("lib.HC")
+local slicy = require("lib.slicy")
 local MainState = {}
 
 local DEBUG = false
 
-local MAX_ORDER_SATURATION = 0.2
+local MAX_ORDER_SATURATION = 0.1
+local CARRY_ORDER_LIMIT = 3
 
 local player_images = {
 	love.graphics.newImage("resources/player-car/carRed6_008.png"),
@@ -26,10 +28,13 @@ local order_delivery_marker = love.graphics.newImage("resources/icons/order_mark
 local default_font = love.graphics.newFont("resources/MontserratMedium.ttf", 32)
 local smoke_particle = love.graphics.newImage("resources/smoke.png")
 local engine_sound = love.audio.newSource("resources/engine-sound.wav", "static")
+local order_slot_empty = love.graphics.newImage("resources/icons/order_slot_empty.png")
+local order_slot = love.graphics.newImage("resources/icons/order_slot.png")
+local grey_box = assert(slicy.load("resources/grey_box.9.png"))
 engine_sound:setLooping(true)
 engine_sound:setVolume(0)
 local smoke_psystem = love.graphics.newParticleSystem(smoke_particle, 32)
-smoke_psystem:setParticleLifetime(2, 5)
+smoke_psystem:setParticleLifetime(1, 3)
 smoke_psystem:setEmissionRate(5)
 smoke_psystem:setSizes(0.1, 0.15, 0.3)
 smoke_psystem:setSizeVariation(1)
@@ -158,6 +163,7 @@ function MainState:init()
 	self.sitting_orders = {}
 	self.holding_orders = {}
 	self.orders_completed = 0
+	self.time_left = 30
 
 	local player_spawnpoint = self.map:getLayer("Player spawnpoint").objects[1]
 	self.player = {
@@ -233,12 +239,12 @@ function MainState:create_order_in_region(region)
 	local from_house = lume.randomchoice(from_house_options)
 	if not from_house then return end
 
-	local to_house_region = lume.randomchoice(from_house.regions)
+	local to_house_region = lume.randomchoice(self.regions)
 	local to_house_options = self:get_available_houses_in_region(to_house_region)
 	lume.remove(to_house_options, from_house)
 	if #to_house_options == 0 then return end
 
-	local to_house = lume.randomchoice(to_house_region.houses)
+	local to_house = lume.randomchoice(to_house_options)
 
 	local order = { from_house = from_house, to_house = to_house }
 	table.insert(self.active_orders, order)
@@ -320,6 +326,7 @@ function MainState:player_car_controls(dt)
 end
 
 function MainState:update(dt)
+	self.time_left = self.time_left - dt
 	Timer.update(dt)
 	smoke_psystem:update(dt)
 	self:player_car_controls(dt)
@@ -349,20 +356,25 @@ function MainState:keypressed(key)
 			end
 		end
 
-		for _, order in ipairs(picked_up_orders) do
-			lume.remove(self.sitting_orders, order)
-			table.insert(self.holding_orders, order)
-		end
-
 		local dropped_orders = {}
 		for _, order in ipairs(self.holding_orders) do
 			if (order.to_house.pos - self.player.pos).length < 100 then
 				table.insert(dropped_orders, order)
 			end
 		end
+
 		for _, order in ipairs(dropped_orders) do
 			lume.remove(self.active_orders, order)
 			lume.remove(self.holding_orders, order)
+		end
+
+		for _, order in ipairs(picked_up_orders) do
+			if #self.holding_orders < CARRY_ORDER_LIMIT then
+				local distance = (order.to_house.pos - order.from_house.pos).length
+				self.time_left = self.time_left + distance/150
+				lume.remove(self.sitting_orders, order)
+				table.insert(self.holding_orders, order)
+			end
 		end
 		self.orders_completed = self.orders_completed + #dropped_orders
 	end
@@ -531,7 +543,23 @@ function MainState:draw()
 
 	local screenW, screenH = love.graphics.getDimensions()
 	love.graphics.setFont(default_font)
-	love.graphics.print("Orders: ", 100, screenH - 100)
+	love.graphics.push()
+	love.graphics.translate(20, screenH - 70)
+	grey_box:draw(-10, -10, 260, 60)
+	love.graphics.setColor(rgb(20, 20, 20))
+	love.graphics.print("Orders: ")
+	love.graphics.setColor(1, 1, 1, 1)
+	for i=0, #self.holding_orders-1 do
+		love.graphics.draw(order_slot, 130 + i*(32 + 5), 5 + math.sin(now+i)*5)
+	end
+	for i=#self.holding_orders, CARRY_ORDER_LIMIT-1 do
+		love.graphics.draw(order_slot_empty, 130 + i*(32 + 5), 5)
+	end
+
+	grey_box:draw(270, -10, 260, 60)
+	love.graphics.setColor(rgb(20, 20, 20))
+	love.graphics.print(("Time: %.1fs"):format(self.time_left), 285)
+	love.graphics.pop()
 end
 
 return MainState

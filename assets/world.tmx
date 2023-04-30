@@ -2246,7 +2246,7 @@
   <object id="230" x="-2089.5" y="-1641.5" width="12.5" height="201.5"/>
   <object id="233" x="-2024" y="-1064.25" width="12.5" height="263.75"/>
  </objectgroup>
- <objectgroup id="12" name="Regions" tintcolor="#000000">
+ <objectgroup id="12" name="Regions" visible="0" tintcolor="#000000">
   <object id="217" x="-2070.79" y="-3130.24" width="1845.76" height="1190.85">
    <properties>
     <property name="region_name" value="right-2"/>
@@ -2294,7 +2294,7 @@
   </object>
  </objectgroup>
  <objectgroup id="10" name="Player spawnpoint">
-  <object id="30" x="-319.939" y="-235.697">
+  <object id="30" x="265.061" y="339.303">
    <point/>
   </object>
  </objectgroup>
