@@ -109,10 +109,6 @@ function Map.new(map)
 
 	self.layers = {}
 	for _, layer in ipairs(map.layers) do
-		if not layer.visible then
-			goto continue
-		end
-
 		local newLayer = {
 			name = layer.name,
 			visible = layer.visible,

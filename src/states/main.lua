@@ -5,7 +5,9 @@ local Tiled = require("lib.tiled")
 local HC = require("lib.HC")
 local MainState = {}
 
-local DEBUG = true
+local DEBUG = false
+
+local MAX_ORDER_SATURATION = 0.2
 
 local player_images = {
 	love.graphics.newImage("resources/player-car/carRed6_008.png"),
@@ -17,6 +19,9 @@ local player_images = {
 	love.graphics.newImage("resources/player-car/carRed6_001.png"),
 	love.graphics.newImage("resources/player-car/carRed6_002.png")
 }
+
+local pending_order_icon = love.graphics.newImage("resources/icons/emote_circle.png")
+local order_delivery_icon = love.graphics.newImage("resources/icons/emote_cash.png")
 
 local function boolToNumber(x)
 	return x and 1 or 0
@@ -45,11 +50,6 @@ end
 
 function MainState:init()
 	self.map = Tiled.loadFromLuaFile("resources/world.lua")
-
-	self.delivery_points = {}
-	for _, obj in ipairs(self.map:getLayer("Delivery points").objects) do
-		table.insert(self.delivery_points, Vec(obj.x, obj.y))
-	end
 
 	self.collider_world = HC.new(self.map.tileWidth*4)
 	self.building_colliders = {}
@@ -176,20 +176,62 @@ function MainState:create_order_at_player()
 		regions = self.regions
 	end
 
-	self:create_order_in_region(regions[love.math.random(1, #regions)])
+	local region = regions[love.math.random(1, #regions)]
+	if self:get_order_saturation(region) > MAX_ORDER_SATURATION then
+		return
+	end
+
+	self:create_order_in_region(region)
+end
+
+function MainState:is_house_used_in_order(house)
+	for _, order in ipairs(self.active_orders) do
+		if order.from_house == house or order.to_house == house then
+			return true
+		end
+	end
+	return false
+end
+
+function MainState:get_available_houses_in_region(region)
+	local houses = {}
+	for _, house in ipairs(region.houses) do
+		if not self:is_house_used_in_order(house) then
+			table.insert(houses, house)
+		end
+	end
+	return houses
+end
+
+function MainState:get_order_saturation(region)
+	local used_houses = 0
+	for _, house in ipairs(region.houses) do
+		if self:is_house_used_in_order(house) then
+			used_houses = used_houses + 1
+		end
+	end
+	return used_houses / #region.houses
 end
 
 function MainState:create_order_in_region(region)
-	local from_house = region.houses[love.math.random(1, #region.houses)]
-	local to_house_region = from_house.regions[love.math.random(1, #from_house.regions)]
-	local to_house = from_house
-	while from_house == to_house do
-		to_house = to_house_region.houses[love.math.random(1, #to_house_region.houses)]
-	end
+	local from_house_options = self:get_available_houses_in_region(region)
+	if #from_house_options == 0 then return end
+
+	local from_house = lume.randomchoice(from_house_options)
+	if not from_house then return end
+
+	local to_house_region = lume.randomchoice(from_house.regions)
+	local to_house_options = self:get_available_houses_in_region(to_house_region)
+	lume.remove(to_house_options, from_house)
+	if #to_house_options == 0 then return end
+
+	local to_house = lume.randomchoice(to_house_region.houses)
 
 	local order = { from_house = from_house, to_house = to_house }
 	table.insert(self.active_orders, order)
 	table.insert(self.sitting_orders, order)
+
+	return order
 end
 
 
@@ -408,45 +450,31 @@ function MainState:draw()
 		end
 	end
 
-	love.graphics.setColor(rgb(20, 200, 200))
-	for _, house in ipairs(self.houses) do
-		love.graphics.circle("fill", house.pos.x, house.pos.y, 20)
-	end
-
-	love.graphics.setColor(rgb(20, 100, 100))
-	for i = 0, #self.holding_orders - 1 do
-		love.graphics.circle("fill", pos.x + i * 12, pos.y - 30, 5)
-	end
-
-	do
-		local orders_per_house = {}
-		for _, order in ipairs(self.sitting_orders) do
-			orders_per_house[order.from_house] = orders_per_house[order.from_house] or {}
-
-			table.insert(orders_per_house[order.from_house], order)
+	if DEBUG then
+		love.graphics.setColor(rgb(20, 200, 200))
+		for _, house in ipairs(self.houses) do
+			love.graphics.circle("fill", house.pos.x, house.pos.y, 20)
 		end
+
 		love.graphics.setColor(rgb(20, 100, 100))
-		for house, orders in pairs(orders_per_house) do
-			for i = 0, #orders - 1 do
-				love.graphics.circle("fill", house.pos.x + i * 12, house.pos.y - 30, 5)
-			end
+		for i = 0, #self.holding_orders - 1 do
+			love.graphics.circle("fill", pos.x + i * 12, pos.y - 30, 5)
 		end
 	end
 
-	do
-		local orders_per_house = {}
-		for _, order in ipairs(self.holding_orders) do
-			orders_per_house[order.to_house] = orders_per_house[order.to_house] or {}
-
-			table.insert(orders_per_house[order.to_house], order)
-		end
-		love.graphics.setColor(rgb(100, 20, 100))
-		for house, orders in pairs(orders_per_house) do
-			for i = 0, #orders - 1 do
-				love.graphics.circle("fill", house.pos.x + i * 12, house.pos.y - 30, 5)
-			end
-		end
+	love.graphics.setColor(1, 1, 1, 1)
+	for _, order in ipairs(self.sitting_orders) do
+		local pos = order.from_house.pos
+		local iconW, iconH = pending_order_icon:getDimensions()
+		love.graphics.draw(pending_order_icon, pos.x - iconW/2, pos.y - iconH)
 	end
+
+	for _, order in ipairs(self.holding_orders) do
+		local pos = order.to_house.pos
+		local iconW, iconH = order_delivery_icon:getDimensions()
+		love.graphics.draw(order_delivery_icon, pos.x - iconW/2, pos.y - iconH)
+	end
+
 	self.camera:detach()
 
 	if DEBUG then

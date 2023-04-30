@@ -7926,7 +7926,7 @@ return {
         },
         {
           data = {
-            207,
+            214,
             600,
             600,
             214,
@@ -27540,6 +27540,19 @@ return {
           width = 60.833300000000001,
           x = -322.75,
           y = -1265.3299999999999
+        },
+        {
+          class = "",
+          height = 35.25,
+          id = 227,
+          name = "",
+          properties = {},
+          rotation = 0,
+          shape = "rectangle",
+          visible = true,
+          width = 11.75,
+          x = -1478.5,
+          y = -1685.5
         }
       },
       offsetx = 0,
@@ -27615,7 +27628,7 @@ return {
         0
       },
       type = "objectgroup",
-      visible = true
+      visible = false
     },
     {
       class = "",
@@ -27645,26 +27658,11 @@ return {
       properties = {},
       type = "objectgroup",
       visible = true
-    },
-    {
-      class = "",
-      draworder = "topdown",
-      id = 7,
-      name = "Delivery points",
-      objects = {},
-      offsetx = 0,
-      offsety = 0,
-      opacity = 1,
-      parallaxx = 1,
-      parallaxy = 1,
-      properties = {},
-      type = "objectgroup",
-      visible = true
     }
   },
   luaversion = "5.1",
   nextlayerid = 13,
-  nextobjectid = 227,
+  nextobjectid = 228,
   orientation = "isometric",
   properties = {},
   renderorder = "right-down",
