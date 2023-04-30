@@ -4,6 +4,7 @@ local Camera = require("lib.hump.camera")
 local Tiled = require("lib.tiled")
 local HC = require("lib.HC")
 local slicy = require("lib.slicy")
+local Gamestate = require("lib.hump.gamestate")
 local MainState = {}
 
 local DEBUG = false
@@ -27,12 +28,9 @@ local order_delivery_icon = love.graphics.newImage("resources/icons/emote_cash.p
 local order_delivery_marker = love.graphics.newImage("resources/icons/order_marker.png")
 local default_font = love.graphics.newFont("resources/MontserratMedium.ttf", 32)
 local smoke_particle = love.graphics.newImage("resources/smoke.png")
-local engine_sound = love.audio.newSource("resources/engine-sound.wav", "static")
 local order_slot_empty = love.graphics.newImage("resources/icons/order_slot_empty.png")
 local order_slot = love.graphics.newImage("resources/icons/order_slot.png")
 local grey_box = assert(slicy.load("resources/grey_box.9.png"))
-engine_sound:setLooping(true)
-engine_sound:setVolume(0)
 local smoke_psystem = love.graphics.newParticleSystem(smoke_particle, 32)
 smoke_psystem:setParticleLifetime(1, 3)
 smoke_psystem:setEmissionRate(5)
@@ -66,7 +64,6 @@ local function getRegionsAt(regions, x, y)
 end
 
 function MainState:init()
-	engine_sound:play()
 	self.map = Tiled.loadFromLuaFile("resources/world.lua")
 
 	self.collider_world = HC.new(self.map.tileWidth*4)
@@ -164,6 +161,7 @@ function MainState:init()
 	self.holding_orders = {}
 	self.orders_completed = 0
 	self.time_left = 30
+	self.moved = false
 
 	local player_spawnpoint = self.map:getLayer("Player spawnpoint").objects[1]
 	self.player = {
@@ -260,6 +258,10 @@ function MainState:player_car_controls(dt)
 	local thrust  = boolToNumber(love.keyboard.isDown("w")) - boolToNumber(love.keyboard.isDown("s")) * 0.5
 	local braking = love.keyboard.isDown("lshift")
 
+	if turn ~= 0 or thrust ~= 0 then
+		self.moved = true
+	end
+
 	local friction = 1
 	local turn_speed = math.pi
 	if turn ~= 0 and thrust ~= 0 then
@@ -308,9 +310,6 @@ function MainState:player_car_controls(dt)
 		player.break_hold_time = 0
 	end
 
-	local velocity = player.vel.length
-	engine_sound:setVolume(0.1+math.min(velocity/100, 0.4))
-
 	player.vel = player.vel * (1 - math.min(friction, 1)) ^ dt
 	player.vel = player.vel + acc * dt
 	player.pos = player.pos + player.vel * dt
@@ -326,10 +325,17 @@ function MainState:player_car_controls(dt)
 end
 
 function MainState:update(dt)
-	self.time_left = self.time_left - dt
+	if self.moved then
+		self.time_left = self.time_left - dt
+	end
+
 	Timer.update(dt)
 	smoke_psystem:update(dt)
 	self:player_car_controls(dt)
+
+	if self.time_left <= 0 then
+		Gamestate.switch(require("states.game-over"), self.orders_completed)
+	end
 
 	local move_speed = 2
 	local target_pos = self.player.pos + self.player.vel
@@ -338,9 +344,7 @@ function MainState:update(dt)
 end
 
 function MainState:keypressed(key)
-	if key == "escape" then
-		love.event.quit()
-	elseif key == "w" then
+	if key == "w" then
 		-- local now = love.timer.getTime()
 		-- local diff = now - self.player.last_forward_press
 		-- self.player.last_forward_press = now
