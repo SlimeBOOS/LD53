@@ -22,6 +22,15 @@ local player_images = {
 
 local pending_order_icon = love.graphics.newImage("resources/icons/emote_circle.png")
 local order_delivery_icon = love.graphics.newImage("resources/icons/emote_cash.png")
+local default_font = love.graphics.newFont("resources/MontserratMedium.ttf", 32)
+local smoke_particle = love.graphics.newImage("resources/smoke.png")
+local smoke_psystem = love.graphics.newParticleSystem(smoke_particle, 32)
+smoke_psystem:setParticleLifetime(2, 5) -- Particles live at least 2s and at most 5s.
+smoke_psystem:setEmissionRate(5)
+smoke_psystem:setSizes(0.1, 0.15, 0.3)
+smoke_psystem:setSizeVariation(1)
+smoke_psystem:setLinearAcceleration(-20, -20, 20, 20) -- Random movement in all directions.
+smoke_psystem:setColors(1, 1, 1, 1, 1, 1, 1, 0) -- Fade to transparency.
 
 local function boolToNumber(x)
 	return x and 1 or 0
@@ -112,7 +121,7 @@ function MainState:init()
 	self.regions = {}
 	for _, obj in ipairs(self.map:getLayer("Regions").objects) do
 		local region_name = obj.properties and obj.properties.region_name
-		assert(region_name ~= nil, "Region name not defined at (%f %f %f %f)", obj.x, obj.y, obj.width, obj.height)
+		assert(region_name ~= nil, ("Region name not defined at (%d %d %d %d)"):format(obj.x, obj.y, obj.width, obj.height))
 
 		local region = region_lookup[region_name]
 		if not region then
@@ -306,6 +315,7 @@ end
 
 function MainState:update(dt)
 	Timer.update(dt)
+	smoke_psystem:update(dt)
 	self:player_car_controls(dt)
 
 	local move_speed = 2
@@ -359,7 +369,15 @@ function MainState:drawPlayer()
 
 	love.graphics.push()
 
-	love.graphics.translate(pos.x, pos.y)
+	local rotation_count = #player_images
+	local image_idx = math.floor((look_dir.angle / (2*math.pi) * rotation_count) + 0.5) % rotation_count + 1
+	local player_image = player_images[image_idx]
+	local image_width, image_height = player_image:getDimensions()
+	local now = love.timer.getTime()
+	local velocity = self.player.vel.length
+	local rumble_offset = (math.sin(now*25) + 1) * math.min(velocity / 100, 1) * 1.2
+
+	love.graphics.translate(pos.x, pos.y + rumble_offset)
 	if DEBUG then
 		love.graphics.push()
 		love.graphics.rotate(look_dir.angle)
@@ -376,13 +394,19 @@ function MainState:drawPlayer()
 	end
 
 	love.graphics.setColor(1, 1, 1, 1)
-	local rotation_count = #player_images
-	local image_idx = math.floor((look_dir.angle / (2*math.pi) * rotation_count) + 0.5) % rotation_count + 1
-	local player_image = player_images[image_idx]
-	local image_width, image_height = player_image:getDimensions()
 	love.graphics.draw(player_image, -image_width/2, -image_height/2)
 
 	love.graphics.pop()
+
+	if velocity > 50 then
+		local snapped_look_dir = math.pi + (image_idx - 1) / rotation_count * math.pi*2
+		local exhaust_offset = Vec(-image_width/2, image_height/2):angled(snapped_look_dir)
+		smoke_psystem:setPosition(pos.x + exhaust_offset.x, pos.y + exhaust_offset.y)
+		smoke_psystem:start()
+	else
+		smoke_psystem:stop()
+	end
+	love.graphics.draw(smoke_psystem, 0, 0)
 end
 
 function MainState:highlightIsometricTile(tileX, tileY)
@@ -462,27 +486,34 @@ function MainState:draw()
 		end
 	end
 
+	local now = love.timer.getTime()
 	love.graphics.setColor(1, 1, 1, 1)
 	for _, order in ipairs(self.sitting_orders) do
 		local pos = order.from_house.pos
 		local iconW, iconH = pending_order_icon:getDimensions()
-		love.graphics.draw(pending_order_icon, pos.x - iconW/2, pos.y - iconH)
+		local floatOffset = (math.sin(now*3 + pos.x + pos.y) + 1) / 2 * 15
+		love.graphics.draw(pending_order_icon, pos.x - iconW/2, pos.y - iconH + floatOffset)
 	end
 
 	for _, order in ipairs(self.holding_orders) do
 		local pos = order.to_house.pos
 		local iconW, iconH = order_delivery_icon:getDimensions()
-		love.graphics.draw(order_delivery_icon, pos.x - iconW/2, pos.y - iconH)
+		local floatOffset = (math.sin(now*3 + pos.x + pos.y) + 1) / 2 * 15
+		love.graphics.draw(order_delivery_icon, pos.x - iconW/2, pos.y - iconH + floatOffset)
 	end
 
 	self.camera:detach()
 
+	love.graphics.setColor(rgb(255, 255, 255))
 	if DEBUG then
-		love.graphics.setColor(rgb(255, 255, 255))
 		love.graphics.setNewFont(30)
 		love.graphics.print(tostring(self.orders_completed), 10, 10)
 		love.graphics.print(("%f"):format(self.player.vel.length), 10, 40)
 	end
+
+	local screenW, screenH = love.graphics.getDimensions()
+	love.graphics.setFont(default_font)
+	love.graphics.print("Orders: ", 100, screenH - 100)
 end
 
 return MainState

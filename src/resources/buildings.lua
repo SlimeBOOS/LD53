@@ -13,7 +13,7 @@ return {
   objectalignment = "unspecified",
   properties = {},
   spacing = 0,
-  tilecount = 75,
+  tilecount = 85,
   tiledversion = "1.9.2",
   tileheight = 130,
   tileoffset = {
@@ -56,6 +56,15 @@ return {
       width = 132
     },
     {
+      height = 127,
+      id = 10,
+      image = "resources/images/buildingTiles_010.png",
+      properties = {
+        tall = true
+      },
+      width = 132
+    },
+    {
       height = 128,
       id = 11,
       image = "resources/images/buildingTiles_011.png",
@@ -66,12 +75,33 @@ return {
     },
     {
       height = 127,
+      id = 12,
+      image = "resources/images/buildingTiles_012.png",
+      properties = {
+        tall = true
+      },
+      width = 132
+    },
+    {
+      height = 54,
+      id = 13,
+      image = "resources/images/buildingTiles_013.png",
+      width = 99
+    },
+    {
+      height = 127,
       id = 14,
       image = "resources/images/buildingTiles_014.png",
       properties = {
         tall = true
       },
       width = 132
+    },
+    {
+      height = 85,
+      id = 15,
+      image = "resources/images/buildingTiles_015.png",
+      width = 99
     },
     {
       height = 127,
@@ -125,9 +155,24 @@ return {
       width = 99
     },
     {
+      height = 85,
+      id = 24,
+      image = "resources/images/buildingTiles_024.png",
+      width = 99
+    },
+    {
       height = 127,
       id = 26,
       image = "resources/images/buildingTiles_026.png",
+      properties = {
+        tall = true
+      },
+      width = 132
+    },
+    {
+      height = 127,
+      id = 28,
+      image = "resources/images/buildingTiles_028.png",
       properties = {
         tall = true
       },
@@ -218,6 +263,15 @@ return {
       height = 130,
       id = 40,
       image = "resources/images/buildingTiles_040.png",
+      properties = {
+        tall = true
+      },
+      width = 132
+    },
+    {
+      height = 127,
+      id = 41,
+      image = "resources/images/buildingTiles_041.png",
       properties = {
         tall = true
       },
@@ -407,6 +461,18 @@ return {
       width = 100
     },
     {
+      height = 61,
+      id = 88,
+      image = "resources/images/buildingTiles_088.png",
+      width = 99
+    },
+    {
+      height = 63,
+      id = 90,
+      image = "resources/images/buildingTiles_090.png",
+      width = 99
+    },
+    {
       height = 127,
       id = 93,
       image = "resources/images/buildingTiles_093.png",
@@ -419,6 +485,12 @@ return {
       height = 55,
       id = 94,
       image = "resources/images/buildingTiles_094.png",
+      width = 100
+    },
+    {
+      height = 55,
+      id = 95,
+      image = "resources/images/buildingTiles_095.png",
       width = 100
     },
     {
