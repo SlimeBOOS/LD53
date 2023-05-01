@@ -29,6 +29,8 @@ local order_delivery_marker = love.graphics.newImage("resources/icons/order_mark
 local default_font = love.graphics.newFont("resources/MontserratMedium.ttf", 32)
 local smoke_particle = love.graphics.newImage("resources/smoke.png")
 local order_slot_empty = love.graphics.newImage("resources/icons/order_slot_empty.png")
+local speedometer_gauge = love.graphics.newImage("resources/icons/speedometer-gauge.png")
+local speedometer_needle = love.graphics.newImage("resources/icons/speedometer-needle.png")
 local order_slot = love.graphics.newImage("resources/icons/order_slot.png")
 local grey_box = assert(slicy.load("resources/grey_box.9.png"))
 local smoke_psystem = love.graphics.newParticleSystem(smoke_particle, 32)
@@ -563,6 +565,19 @@ function MainState:draw()
 	grey_box:draw(270, -10, 260, 60)
 	love.graphics.setColor(rgb(20, 20, 20))
 	love.graphics.print(("Time: %.1fs"):format(self.time_left), 285)
+	love.graphics.pop()
+
+	love.graphics.setColor(1, 1, 1, 1)
+	local gaugeW, gaugeH = speedometer_gauge:getDimensions()
+	love.graphics.push()
+	love.graphics.translate(screenW - gaugeW - 20, screenH - gaugeH - 20)
+	love.graphics.draw(speedometer_gauge, 0, 0)
+	local needle_angle = (self.player.vel.length / 500) * (math.pi*1.5)
+	local needleW, _ = speedometer_needle:getDimensions()
+	love.graphics.translate(gaugeW/2, gaugeH/2)
+	love.graphics.rotate(needle_angle)
+	love.graphics.draw(speedometer_needle, -needleW/2, -needleW/2)
+
 	love.graphics.pop()
 end
 

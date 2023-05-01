@@ -7,3 +7,4 @@ Used assets:
 * https://www.kenney.nl/assets/isometric-landscape
 * https://www.kenney.nl/assets/ui-pack
 * https://www.fontspace.com/montserrat-font-f16544
+* https://khanoyanabrahamgmailcom.itch.io/speedometer-and-tachometer

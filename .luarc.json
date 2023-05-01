@@ -3,6 +3,10 @@
     "Lua.diagnostics.disable": [
         "redefined-local"
     ],
+    "Lua.diagnostics.globals": [
+        "pprint",
+        "rgb"
+    ],
     "Lua.runtime.version": "LuaJIT",
     "Lua.workspace.library": [
         "${3rd}/love2d/library"
